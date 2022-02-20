@@ -132,3 +132,11 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CELERY Configuration
+BROKER_URL = config('BROKER_URL')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
+CELERY_ACCEPT_CONTENT = config('CELERY_ACCEPT_CONTENT', cast=Csv(delimiter=' '))
+CELERY_TASK_SERIALIZER = config('CELERY_TASK_SERIALIZER')
+CELERY_RESULT_SERIALIZER = config('CELERY_RESULT_SERIALIZER')
+CELERY_TIMEZONE = config('CELERY_TIMEZONE')
