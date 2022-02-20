@@ -1,3 +1,4 @@
 pip==22.0.3
 django==3.2
 python-decouple==3.6
+psycopg2-binary==2.9.3
