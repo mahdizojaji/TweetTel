@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Local apps
     'twitter.apps.TwitterConfig',
+    # Local packages
+    'extensions',
 ]
 
 MIDDLEWARE = [
@@ -143,3 +145,13 @@ CELERY_ACCEPT_CONTENT = config('CELERY_ACCEPT_CONTENT', cast=Csv(delimiter=' '))
 CELERY_TASK_SERIALIZER = config('CELERY_TASK_SERIALIZER')
 CELERY_RESULT_SERIALIZER = config('CELERY_RESULT_SERIALIZER')
 CELERY_TIMEZONE = config('CELERY_TIMEZONE')
+
+
+# Twitter API settings
+CONSUMER_KEY = config('CONSUMER_KEY')
+CONSUMER_SECRET = config('CONSUMER_SECRET')
+ACCESS_TOKEN = config('ACCESS_TOKEN')
+ACCESS_TOKEN_SECRET = config('ACCESS_TOKEN_SECRET')
+BEARER_TOKEN = config('BEARER_TOKEN')
+CLIENT_ID = config('CLIENT_ID')
+CLIENT_SECRET = config('CLIENT_SECRET')

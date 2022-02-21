@@ -4,3 +4,4 @@ python-decouple==3.6
 psycopg2-binary==2.9.3
 celery==5.2.3
 flower==1.0.0
+tweepy==4.5.0
