@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.postgres.fields import CICharField
 
+from extensions.twitter import get_user_info
+
 import uuid
 
 
@@ -46,6 +48,16 @@ class TargetUser(BaseModel):
         null=True,
         blank=True,
     )
+
+    def update_data(self):
+        if data := (self.twitter_id or self.username):
+            response = get_user_info(data)
+            user_info = response.data
+            self.name = user_info.name
+            self.username = user_info.username
+            self.twitter_id = int(user_info.id) or None
+        else:
+            raise ValueError('No data to update')
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if isinstance(self.username, str):
