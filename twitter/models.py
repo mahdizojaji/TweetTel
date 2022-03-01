@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import CICharField
 
 from extensions import twitter
+from .managers import TargetUserManager as _TargetUserManager
 
 import uuid
 
@@ -29,6 +30,7 @@ class BaseModel(models.Model):
 
 
 class TargetUser(BaseModel):
+    objects = _TargetUserManager()
     twitter_id = models.CharField(
         verbose_name='Twitter ID',
         max_length=255,
