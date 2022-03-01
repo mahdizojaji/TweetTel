@@ -138,7 +138,10 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
 # CELERY Configuration
+# https://docs.celeryproject.org/en/latest/userguide/configuration.html
+
 BROKER_URL = config('BROKER_URL')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
 CELERY_ACCEPT_CONTENT = config('CELERY_ACCEPT_CONTENT', cast=Csv(delimiter=' '))
@@ -148,6 +151,8 @@ CELERY_TIMEZONE = config('CELERY_TIMEZONE')
 
 
 # Twitter API settings
+# https://developer.twitter.com/en/portal/dashboard
+
 CONSUMER_KEY = config('CONSUMER_KEY')
 CONSUMER_SECRET = config('CONSUMER_SECRET')
 ACCESS_TOKEN = config('ACCESS_TOKEN')
@@ -155,3 +160,17 @@ ACCESS_TOKEN_SECRET = config('ACCESS_TOKEN_SECRET')
 BEARER_TOKEN = config('BEARER_TOKEN')
 CLIENT_ID = config('CLIENT_ID')
 CLIENT_SECRET = config('CLIENT_SECRET')
+
+
+# Cache
+# https://docs.djangoproject.com/en/3.2/topics/cache/
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{config('REDIS_HOST')}:{config('REDIS_PORT')}/{config('REDIS_DB')}",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
+    }
+}
