@@ -9,9 +9,8 @@ def celery_ready_worker(sender=None, headers=None, body=None, **kwargs):
 
 
 def task_revoked(sender=None, headers=None, body=None, request=None, **kwargs):
-    if sender == twitter_streamer:
-        cache.delete('STREAMER_TASK_ID')
-        twitter_streamer.delay()
+    cache.delete('STREAMER_TASK_ID')
+    twitter_streamer.delay()
 
 
 def task_post_run(sender=None, headers=None, body=None, **kwargs):
