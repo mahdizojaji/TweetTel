@@ -1,9 +1,11 @@
+from django.core.cache import cache
 from django.contrib import admin, messages
 from django.utils.translation import gettext as _, ngettext
 
 from .models import TargetUser
 
 from logging import getLogger
+from celery.result import AsyncResult
 
 logger = getLogger(__name__)
 
@@ -13,9 +15,15 @@ class TargetUserAdmin(admin.ModelAdmin):
     list_display = ('id', 'uuid', 'twitter_id', 'username', 'name', 'created_at', 'updated_at')
     fields = ('id', 'uuid', 'twitter_id', 'username', 'name', 'created_at', 'updated_at')
     readonly_fields = ('id', 'uuid', 'created_at', 'updated_at')
-    actions = ['update_data', 'clear_invalid']
+    actions = ['update_data', 'clear_invalid', 'update_stream']
 
-    @admin.action(description='Update selected Target Users')
+    @admin.action(description='Update stream target users')
+    def update_stream(self, request, queryset):
+        running_task = AsyncResult(cache.get('STREAMER_TASK_ID', ''))
+        running_task.revoke(terminate=True)
+        self.message_user(request, _('Stream target users updated'), messages.SUCCESS)
+
+    @admin.action(description='Update selected target users')
     def update_data(self, request, queryset):
         success = failed = 0
         for user in queryset:
