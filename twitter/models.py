@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import CICharField
 
-from extensions.twitter import get_user_info
+from extensions import twitter
 
 import uuid
 
@@ -51,7 +51,7 @@ class TargetUser(BaseModel):
 
     def update_data(self):
         if data := (self.twitter_id or self.username):
-            response = get_user_info(data)
+            response = twitter.get_user_info(data)
             user_info = response.data
             self.name = user_info.name
             self.username = user_info.username
