@@ -13,7 +13,7 @@ class TargetUserAdmin(admin.ModelAdmin):
     list_display = ('id', 'uuid', 'twitter_id', 'username', 'name', 'created_at', 'updated_at')
     fields = ('id', 'uuid', 'twitter_id', 'username', 'name', 'created_at', 'updated_at')
     readonly_fields = ('id', 'uuid', 'created_at', 'updated_at')
-    actions = ['update_data']
+    actions = ['update_data', 'clear_invalid']
 
     @admin.action(description='Update selected Target Users')
     def update_data(self, request, queryset):
@@ -34,6 +34,20 @@ class TargetUserAdmin(admin.ModelAdmin):
             f'Success: {success}\n'
             f'Failed: {failed}\n'
             f'Total: {len(queryset)}\n'
+        ), messages.SUCCESS)
+
+    @admin.action(description='Clear selected Invalid Target Users')
+    def clear_invalid(self, request, queryset):
+        deleted = 0
+        for user in queryset:
+            user: TargetUser
+            if not (user.twitter_id or user.username):
+                user.delete()
+                deleted += 1
+        return self.message_user(request, ngettext(
+            f'{deleted} Target User was deleted.',
+            f'{deleted} Target Users were deleted.',
+            deleted,
         ), messages.SUCCESS)
 
     def save_model(self, request, obj, form, change):
