@@ -29,8 +29,9 @@ class BaseModel(models.Model):
 
 
 class TargetUser(BaseModel):
-    twitter_id = models.BigIntegerField(
+    twitter_id = models.CharField(
         verbose_name='Twitter ID',
+        max_length=255,
         unique=True,
         null=True,
         blank=True,
