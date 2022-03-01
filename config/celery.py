@@ -3,7 +3,9 @@ from __future__ import absolute_import
 import os
 
 from django.conf import settings
-from celery import Celery
+from celery import Celery, signals
+
+from twitter.tasks import celery_ready_worker, task_post_run, worker_shutting_down
 
 
 # set the default Django settings module for the 'celery' program.
@@ -14,3 +16,7 @@ app = Celery('config')
 # pickle the object when using Windows.
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+
+signals.worker_ready.connect(celery_ready_worker)
+signals.task_postrun.connect(task_post_run)
+signals.worker_shutting_down.connect(worker_shutting_down)
