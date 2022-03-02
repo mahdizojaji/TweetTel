@@ -19,8 +19,13 @@ class TargetUserAdmin(admin.ModelAdmin):
 
     @admin.action(description='Update stream target users')
     def update_stream(self, request, queryset):
-        running_task = AsyncResult(cache.get('STREAMER_TASK_ID', ''))
-        running_task.revoke(terminate=True)
+        running_task_id = cache.get('STREAMER_TASK_ID')
+        if running_task_id:
+            running_task = AsyncResult(running_task_id)
+            running_task.revoke(terminate=True)
+        else:
+            from .tasks import twitter_streamer
+            twitter_streamer.delay()
         self.message_user(request, _('Stream target users updated'), messages.SUCCESS)
 
     @admin.action(description='Update selected target users')

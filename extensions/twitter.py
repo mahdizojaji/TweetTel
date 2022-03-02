@@ -4,11 +4,15 @@ from json import loads as json_loads, dumps as json_dumps
 
 from tweepy import OAuthHandler, API, Client, Stream
 
+from logging import getLogger
+
 auth = OAuthHandler(consumer_key=settings.CONSUMER_KEY, consumer_secret=settings.CONSUMER_SECRET)
 auth.set_access_token(key=settings.ACCESS_TOKEN, secret=settings.ACCESS_TOKEN_SECRET)
 
 APIv1 = API(auth=auth, wait_on_rate_limit=True)
 APIv2 = Client(bearer_token=settings.BEARER_TOKEN)
+
+logger = getLogger(__name__)
 
 
 class TwitterStreamer(Stream):
@@ -21,10 +25,17 @@ class TwitterStreamer(Stream):
     def start_streaming(self):
         from twitter.models import TargetUser
         target_users = list(TargetUser.objects.twitter_user_ids())
+        if not target_users:
+            logger.warning('No target users found. Streaming not started. '
+                           'Please add target users and use update streamer target users action.')
+            return
         self.filter(follow=target_users)
 
     def on_connect(self):
-        print('Streamer started')
+        logger.info('Streamer started')
+
+    def on_disconnect(self):
+        logger.info('Streamer stopped')
 
     def on_data(self, data):
         dict_tweet = json_loads(data)
