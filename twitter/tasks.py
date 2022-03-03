@@ -1,7 +1,16 @@
+from django.conf import settings
 from django.core.cache import cache
+from django.utils.html import escape
 
 from celery import shared_task
 from celery.result import AsyncResult
+
+from json import loads as json_loads
+
+from logging import getLogger
+
+
+logger = getLogger(__name__)
 
 
 def celery_ready_worker(sender=None, headers=None, body=None, **kwargs):
@@ -29,10 +38,73 @@ def twitter_streamer(self):
     running_task_id = cache.get('STREAMER_TASK_ID', '')
     running_task = AsyncResult(running_task_id)
     if running_task_id and running_task.status == 'PENDING':
-        print('Task already is running')
+        logger.error('Task already is running')
         return
     else:
         cache.set('STREAMER_TASK_ID', f'{self.request.id}')
 
     streamer = twitter.TwitterStreamer()
     streamer.start_streaming()
+
+
+@shared_task(ignore_result=True)
+def send_tweet_to_telegram(data):
+    from extensions import telegram
+    from extensions.twitter import Tweet
+
+    data = json_loads(data)
+    tweet = Tweet(data)
+    if tweet.is_reply:
+        return
+    elif tweet.is_retweet:
+        text = f"""
+<a href="{tweet.url}"> 📩 Tweet Data: </a>
+\t<b>Type:</b> {tweet.type_}
+\t<b>ID:</b> {tweet.id}
+
+<a href="{tweet.retweet.url}"> 🔗 Retweet Data: </a>
+\t<b>Type:</b> {tweet.retweet.type_}
+\t<b>ID:</b> {tweet.retweet.id}
+
+<a href="{tweet.user.url}"> 👤 User Data: </a>
+\t<b>ID:</b> {tweet.user.id}
+\t<b>Name:</b> {escape(tweet.user.name)}
+\t<b>Username:</b> {escape(tweet.user.screen_name)}
+
+📍 #{escape(tweet.user.screen_name)}
+            """
+    elif tweet.is_quote:
+        text = f"""
+<a href="{tweet.url}"> 📩 Tweet Data: </a>
+\t<b>Type:</b> {tweet.type_}
+\t<b>ID:</b> {tweet.id}
+
+<a href="{tweet.quote.url}"> 💬 Quote Data: </a>
+\t<b>Type:</b> {tweet.quote.type_}
+\t<b>ID:</b> {tweet.quote.id}
+
+<a href="{tweet.user.url}"> 👤 User Data: </a>
+\t<b>ID:</b> {tweet.user.id}
+\t<b>Name:</b> {escape(tweet.user.name)}
+\t<b>Username:</b> {escape(tweet.user.screen_name)}
+
+📍 #{escape(tweet.user.screen_name)}
+"""
+    else:
+        text = f"""
+<a href="{tweet.url}"> 📩 Tweet Data: </a>
+\t<b>Type:</b> {tweet.type_}
+\t<b>ID:</b> {tweet.id}
+
+<a href="{tweet.user.url}"> 👤 User Data: </a>
+\t<b>ID:</b> {tweet.user.id}
+\t<b>Name:</b> {escape(tweet.user.name)}
+\t<b>Username:</b> {escape(tweet.user.screen_name)}
+
+📍 #{escape(tweet.user.screen_name)}
+    """
+    logger.info(telegram.send_message(
+        chat_id=settings.TELEGRAM_CHAT_ID,
+        text=text,
+        parse_mode='HTML',
+    ))
