@@ -54,17 +54,18 @@ def send_tweet_to_telegram(data):
     from extensions.twitter.types import Tweet
 
     data = json_loads(data)
-    tweet = Tweet(data)
+    tweet = Tweet().parse(None, data)
+
     if tweet.is_reply:
         return
     elif tweet.is_retweet:
         text = f"""
 <a href="{tweet.url}"> 📩 Tweet Data: </a>
-\t<b>Type:</b> {tweet.type_}
+\t<b>Type:</b> {tweet.type}
 \t<b>ID:</b> {tweet.id}
 
 <a href="{tweet.retweet.url}"> 🔗 Retweet Data: </a>
-\t<b>Type:</b> {tweet.retweet.type_}
+\t<b>Type:</b> {tweet.retweet.type}
 \t<b>ID:</b> {tweet.retweet.id}
 
 <a href="{tweet.user.url}"> 👤 User Data: </a>
@@ -77,7 +78,7 @@ def send_tweet_to_telegram(data):
     elif tweet.is_quote:
         text = f"""
 <a href="{tweet.url}"> 📩 Tweet Data: </a>
-\t<b>Type:</b> {tweet.type_}
+\t<b>Type:</b> {tweet.type}
 \t<b>ID:</b> {tweet.id}
 
 <a href="{tweet.quote.url}"> 💬 Quote Data: </a>
@@ -94,7 +95,7 @@ def send_tweet_to_telegram(data):
     else:
         text = f"""
 <a href="{tweet.url}"> 📩 Tweet Data: </a>
-\t<b>Type:</b> {tweet.type_}
+\t<b>Type:</b> {tweet.type}
 \t<b>ID:</b> {tweet.id}
 
 <a href="{tweet.user.url}"> 👤 User Data: </a>

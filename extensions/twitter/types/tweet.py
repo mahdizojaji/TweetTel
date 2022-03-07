@@ -1,38 +1,88 @@
+import datetime
+
+from tweepy.models import Status, Place
+
 from .twitter_user import TwitterUser
 
 
-class Tweet:
-    def __init__(self, raw_data):
-        self.raw_data = raw_data
-        self.id = raw_data['id']
-        self.text = raw_data['text']
-        self.timestamp = raw_data.get('timestamp_ms')
-        if raw_data['in_reply_to_status_id'] or raw_data['in_reply_to_user_id']:
-            self.is_reply = True
+class Tweet(Status):
+    def __init__(self, api=None):
+        super().__init__(api)
+        self.json: dict or None = None
+        self.created_at: datetime.datetime or None = None
+        self.id: int or None = None
+        self.id_str: str or None = None
+        self.text: str or None = None
+        self.source: str or None = None
+        self.source_url: str or None = None
+        self.truncated: bool or None = None
+        self.in_reply_to_status_id: int or None = None
+        self.in_reply_to_status_id_str: str or None = None
+        self.in_reply_to_user_id: int or None = None
+        self.in_reply_to_user_id_str: str or None = None
+        self.in_reply_to_screen_name: str or None = None
+        self.user: TwitterUser or None = None
+        self.author: TwitterUser or None = None
+        self.geo: dict or None = None
+        self.coordinates: dict or None = None
+        self.place: Place or None = None
+        self.contributors: list or None = None
+        self.is_quote_status: bool or None = None
+        self.quote_count: int or None = None
+        self.reply_count: int or None = None
+        self.retweet_count: int or None = None
+        self.favorite_count: int or None = None
+        self.entities: dict or None = None
+        self.favorited: bool or None = None
+        self.retweeted: bool or None = None
+        self.filter_level: str or None = None
+        self.lang: str or None = None
+        self.timestamp_ms: str or None = None
+        self.retweeted_status: Status or None = None
+        self.quoted_status: Status or None = None
+        self.timestamp: str or None = None
+        self.is_reply: bool or None = None
+        self.reply: dict or None = None
+        self.is_retweet: bool or None = None
+        self.retweet: Tweet or None = None
+        self.is_quote: bool or None = None
+        self.quote: Tweet or None = None
+        self.url: str or None = None
+        self.type: str or None = None
+
+    @classmethod
+    def parse(cls, api, json) -> 'Tweet':
+        status = super().parse(api, json)
+        status.json = json
+        status.timestamp = json.get('timestamp_ms')
+        if json['in_reply_to_status_id'] or json['in_reply_to_user_id']:
+            status.is_reply = True
         else:
-            self.is_reply = False
-        self.reply = {
-            'in_reply_to_status_id': raw_data['in_reply_to_status_id'],
-            'in_reply_to_user_id': raw_data['in_reply_to_user_id'],
-            'in_reply_to_screen_name': raw_data['in_reply_to_screen_name'],
+            status.is_reply = False
+        status.reply = {
+            'id': json['in_reply_to_status_id'],
+            'user_id': json['in_reply_to_user_id'],
+            'username': json['in_reply_to_screen_name'],
         }
-        self.is_retweet = True if raw_data.get('retweeted_status') else False
-        self.retweet = Tweet(raw_data=raw_data['retweeted_status']) if self.is_retweet else None
-        if raw_data.get('is_quote_status'):
-            self.is_quote = True
+        status.is_retweet = True if json.get('retweeted_status') else False
+        status.retweet = Tweet().parse(api, json['retweeted_status']) if status.is_retweet else None
+        if json.get('is_quote_status'):
+            status.is_quote = True
         else:
-            self.is_quote = False
-        self.quote = Tweet(raw_data=raw_data['quoted_status']) if self.is_quote else None
-        self.user = TwitterUser(raw_data=raw_data['user'])
-        if self.is_quote:
-            self.url = raw_data['quoted_status_permalink']['expanded']
+            status.is_quote = False
+        status.quote = Tweet().parse(api, json['quoted_status']) if status.is_quote else None
+        status.user = TwitterUser().parse(api, json['user'])
+        status.author = TwitterUser().parse(api, json['user'])
+        if status.is_quote:
+            status.url = json['quoted_status_permalink']['expanded']
         else:
-            self.url = f'https://twitter.com/{self.user.screen_name}/status/{self.id}'
-        if self.is_retweet:
-            self.type_ = 'retweet'
-        elif self.is_quote:
-            self.type_ = 'quote'
-        elif self.is_reply:
-            self.type_ = 'reply'
+            status.url = f'https://twitter.com/{status.user.screen_name}/status/{status.id}'
+        if status.is_retweet:
+            status.type = 'retweet'
+        elif status.is_quote:
+            status.type = 'quote'
+        elif status.is_reply:
+            status.type = 'reply'
         else:
-            self.type_ = 'tweet'
+            status.type = 'tweet'
+        return status
