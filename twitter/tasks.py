@@ -34,7 +34,8 @@ def worker_shutting_down(sender=None, headers=None, body=None, **kwargs):
 
 @shared_task(bind=True, ignore_result=True)
 def twitter_streamer(self):
-    from extensions import twitter
+    from extensions.twitter.streaming import TwitterStreamer
+
     running_task_id = cache.get('STREAMER_TASK_ID', '')
     running_task = AsyncResult(running_task_id)
     if running_task_id and running_task.status == 'PENDING':
@@ -43,14 +44,14 @@ def twitter_streamer(self):
     else:
         cache.set('STREAMER_TASK_ID', f'{self.request.id}')
 
-    streamer = twitter.TwitterStreamer()
-    streamer.start_streaming()
+    streamer = TwitterStreamer()
+    streamer.idle()
 
 
 @shared_task(ignore_result=True)
 def send_tweet_to_telegram(data):
-    from extensions import telegram
-    from extensions.twitter import Tweet
+    from extensions.telegram import tg_methods
+    from extensions.twitter.types import Tweet
 
     data = json_loads(data)
     tweet = Tweet(data)
@@ -103,7 +104,7 @@ def send_tweet_to_telegram(data):
 
 📍 #{escape(tweet.user.screen_name)}
     """
-    logger.info(telegram.send_message(
+    logger.info(tg_methods.send_message(
         chat_id=settings.TELEGRAM_CHAT_ID,
         text=text,
         parse_mode='HTML',

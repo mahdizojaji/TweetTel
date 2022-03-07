@@ -1,3 +1,5 @@
-from .telegram import Telegram
+from . import telegram
+from . import twitter
 
-telegram = Telegram()
+
+__all__ = ['telegram', 'twitter']

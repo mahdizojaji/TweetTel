@@ -4,7 +4,7 @@ from requests.adapters import HTTPAdapter
 from django.conf import settings
 
 
-class Telegram:
+class TelegramMethod:
     def __init__(self, bot_token=settings.TELEGRAM_BOT_TOKEN, base_url="https://api.telegram.org"):
         if not bot_token:
             raise ValueError("TELEGRAM_BOT_TOKE is not set in .env")
