@@ -406,4 +406,6 @@ tmp/
 .env
 .git/
 .samples/
+postgres_data/
+redis_data/
 # End of https://www.toptal.com/developers/gitignore/api/python,django,virtualenv,linux,jetbrains,pycharm
