@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.cache import cache
-from django.utils.html import escape
+from django.utils.html import escape as html_escape
 
 from celery import shared_task
 from celery.result import AsyncResult
@@ -51,62 +51,41 @@ def twitter_streamer(self):
 @shared_task(ignore_result=True)
 def send_tweet_to_telegram(data):
     from extensions.telegram import tg_methods
+    from extensions.twitter import generate_tweet_image
     from extensions.twitter.types import Tweet
 
-    data = json_loads(data)
-    tweet = Tweet().parse(None, data)
+    tweet: Tweet = Tweet().parse(None, json_loads(data))
 
     if tweet.is_reply:
         return
-    elif tweet.is_retweet:
-        text = f"""
-<a href="{tweet.url}"> 📩 Tweet Data: </a>
-\t<b>Type:</b> {tweet.type}
-\t<b>ID:</b> {tweet.id}
 
-<a href="{tweet.retweet.url}"> 🔗 Retweet Data: </a>
-\t<b>Type:</b> {tweet.retweet.type}
-\t<b>ID:</b> {tweet.retweet.id}
+    tweet_image = generate_tweet_image(
+        name=tweet.user.name,
+        username=tweet.user.username,
+        text=tweet.text,
+        time=tweet.created_at.strftime('%Y-%m-%d'),
+        date=tweet.created_at.strftime('%H:%M:%S'),
+        device=tweet.source,
+        image_url=tweet.user.profile_image_url,
+        is_verified=tweet.user.verified,
+        images=tweet.media_urls,
+    )
 
-<a href="{tweet.user.url}"> 👤 User Data: </a>
-\t<b>ID:</b> {tweet.user.id}
-\t<b>Name:</b> {escape(tweet.user.name)}
-\t<b>Username:</b> {escape(tweet.user.screen_name)}
+    text = f'<b>Type: </b> {tweet.type}\n'
+    text += f'👤 <a href="{tweet.user.url}"> {html_escape(tweet.user.name)} </a> '
+    text += f'🔗 <a href="{tweet.url}">' + 'توییت' + '</a>\n'
+    text += f'#{html_escape(tweet.user.username)}'
 
-📍 #{escape(tweet.user.screen_name)}
-            """
-    elif tweet.is_quote:
-        text = f"""
-<a href="{tweet.url}"> 📩 Tweet Data: </a>
-\t<b>Type:</b> {tweet.type}
-\t<b>ID:</b> {tweet.id}
-
-<a href="{tweet.quote.url}"> 💬 Quote Data: </a>
-\t<b>Type:</b> {tweet.quote.type_}
-\t<b>ID:</b> {tweet.quote.id}
-
-<a href="{tweet.user.url}"> 👤 User Data: </a>
-\t<b>ID:</b> {tweet.user.id}
-\t<b>Name:</b> {escape(tweet.user.name)}
-\t<b>Username:</b> {escape(tweet.user.screen_name)}
-
-📍 #{escape(tweet.user.screen_name)}
-"""
+    if tweet_image:
+        tg_methods.send_photo(
+            chat_id=settings.TELEGRAM_CHAT_ID,
+            photo=tweet_image,
+            caption=text,
+            parse_mode='HTML',
+        )
     else:
-        text = f"""
-<a href="{tweet.url}"> 📩 Tweet Data: </a>
-\t<b>Type:</b> {tweet.type}
-\t<b>ID:</b> {tweet.id}
-
-<a href="{tweet.user.url}"> 👤 User Data: </a>
-\t<b>ID:</b> {tweet.user.id}
-\t<b>Name:</b> {escape(tweet.user.name)}
-\t<b>Username:</b> {escape(tweet.user.screen_name)}
-
-📍 #{escape(tweet.user.screen_name)}
-    """
-    logger.info(tg_methods.send_message(
-        chat_id=settings.TELEGRAM_CHAT_ID,
-        text=text,
-        parse_mode='HTML',
-    ))
+        tg_methods.send_message(
+            chat_id=settings.TELEGRAM_CHAT_ID,
+            text=text,
+            parse_mode='HTML',
+        )

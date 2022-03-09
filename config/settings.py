@@ -133,6 +133,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+# ]
+
+STATIC_ROOT = BASE_DIR / 'static'
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
@@ -160,6 +167,11 @@ ACCESS_TOKEN_SECRET = config('ACCESS_TOKEN_SECRET')
 BEARER_TOKEN = config('BEARER_TOKEN')
 CLIENT_ID = config('CLIENT_ID')
 CLIENT_SECRET = config('CLIENT_SECRET')
+
+# Twitter Extension settings
+TWEET_IMAGE_TEXT_FONT_PATH = STATIC_ROOT / 'fonts' / config('TWEET_IMAGE_TEXT_FONT_FILE_NAME')
+TWEET_IMAGE_TEXT_BOLD_FONT_PATH = STATIC_ROOT / 'fonts' / config('TWEET_IMAGE_TEXT_BOLD_FONT_FILE_NAME')
+TWEET_IMAGE_VERIFIED_ICON_PATH = STATIC_ROOT / 'images' / config('TWEET_IMAGE_VERIFIED_ICON_FILE_NAME')
 
 
 # Cache

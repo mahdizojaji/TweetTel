@@ -47,7 +47,7 @@ class TwitterUser(User):
         self.follow_request_sent: bool or None = None
         self.notifications: bool or None = None
         self.withheld_in_countries: list or None = None
-        self.created_at: datetime.datetime or None = None
+        self.created_at: datetime.datetime = None
         self.username: str or None = None
         self.url: str or None = None
         self.image_data: dict or None = None

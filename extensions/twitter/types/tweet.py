@@ -9,7 +9,7 @@ class Tweet(Status):
     def __init__(self, api=None):
         super().__init__(api)
         self.json: dict or None = None
-        self.created_at: datetime.datetime or None = None
+        self.created_at: datetime.datetime = None
         self.id: int or None = None
         self.id_str: str or None = None
         self.text: str or None = None
@@ -21,11 +21,11 @@ class Tweet(Status):
         self.in_reply_to_user_id: int or None = None
         self.in_reply_to_user_id_str: str or None = None
         self.in_reply_to_screen_name: str or None = None
-        self.user: TwitterUser or None = None
-        self.author: TwitterUser or None = None
+        self.user: TwitterUser = None
+        self.author: TwitterUser = None
         self.geo: dict or None = None
         self.coordinates: dict or None = None
-        self.place: Place or None = None
+        self.place: Place = None
         self.contributors: list or None = None
         self.is_quote_status: bool or None = None
         self.quote_count: int or None = None
@@ -38,17 +38,18 @@ class Tweet(Status):
         self.filter_level: str or None = None
         self.lang: str or None = None
         self.timestamp_ms: str or None = None
-        self.retweeted_status: Status or None = None
-        self.quoted_status: Status or None = None
+        self.retweeted_status: Status = None
+        self.quoted_status: Status = None
         self.timestamp: str or None = None
         self.is_reply: bool or None = None
         self.reply: dict or None = None
         self.is_retweet: bool or None = None
-        self.retweet: Tweet or None = None
+        self.retweet: Tweet = None
         self.is_quote: bool or None = None
-        self.quote: Tweet or None = None
+        self.quote: Tweet = None
         self.url: str or None = None
         self.type: str or None = None
+        self.media_urls: list = []
 
     @classmethod
     def parse(cls, api, json) -> 'Tweet':
@@ -73,6 +74,9 @@ class Tweet(Status):
         status.quote = Tweet().parse(api, json['quoted_status']) if status.is_quote else None
         status.user = TwitterUser().parse(api, json['user'])
         status.author = TwitterUser().parse(api, json['user'])
+        if media := json.get('extended_entities', {}).get('media'):
+            for media_item in media:
+                status.media_urls.append(media_item['media_url_https'])
         if status.is_quote:
             status.url = json['quoted_status_permalink']['expanded']
         else:
