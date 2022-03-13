@@ -59,8 +59,8 @@ class TwitterUser(User):
         user.username = json['screen_name']
         user.url = f'https://twitter.com/{user.username}/'
         user.image_data = {
-            'profile_image_url': json['profile_image_url'],
-            'profile_image_url_https': json['profile_image_url_https'],
-            'profile_banner_url': json['profile_banner_url']
+            'profile_image_url': json.get('profile_image_url'),
+            'profile_image_url_https': json.get('profile_image_url_https'),
+            'profile_banner_url': json.get('profile_banner_url')
         }
         return user
