@@ -48,7 +48,6 @@ services:
     expose:
       - 8000
     volumes:
-      #       - .:/app
       - ./static:/app/static
     command: bash -c "python manage.py migrate && python manage.py migrate && gunicorn config.wsgi:application --bind :8000"
     networks:
@@ -61,8 +60,6 @@ services:
   celery:
     <<: *django
     command: bash -c "celery -A config worker -l INFO --autoscale 10,3"
-    volumes:
-      - .:/app
     env_file:
       - .env
     environment:
@@ -77,12 +74,8 @@ services:
   flower:
     <<: *django
     command: bash -c "celery -A config flower --address=127.0.0.6 --port=5566"
-    volumes:
-      - .:/app
     env_file:
       - .env
-#    ports:
-#      - "5566:5566"
     expose:
       - 5566
     environment:
