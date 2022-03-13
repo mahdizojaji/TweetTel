@@ -50,12 +50,16 @@ def twitter_streamer(self):
 
 @shared_task(ignore_result=True)
 def send_tweet_to_telegram(data):
+    from twitter.models import TargetUser
+
     from extensions.telegram import tg_methods
     from extensions.twitter import generate_tweet_image
     from extensions.twitter.types import Tweet
 
     tweet: Tweet = Tweet().parse(None, json_loads(data))
 
+    if not TargetUser.objects.filter(twitter_id=tweet.user.id_str).exists():
+        return
     if tweet.is_reply:
         return
 
