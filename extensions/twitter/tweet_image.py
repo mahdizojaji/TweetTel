@@ -136,7 +136,7 @@ def generate_main_text_and_get_final_y(drawer, text, space_width):
                     continue
                 if not settings.TWEET_IMAGE_TEXT_RESHAPE and (part[0] in ('@', '#') or is_valid_url(part)):
                     color = links_color
-                elif settings.TWEET_IMAGE_TEXT_RESHAPE and (part[-1] in ('@', '#') or is_valid_url(part)):
+                elif part[0] in ('@', '#') or part[-1] in ('@', '#') or is_valid_url(part):
                     color = links_color
                 else:
                     color = 'white'
