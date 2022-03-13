@@ -1,81 +1,73 @@
-version: '3.7'
+version: '3.8'
+
+x-base:
+  &base
+  env_file:
+    - .env
+  networks:
+    - TweetTel
+  restart: unless-stopped
+
+x-django-app:
+  &main-app-image
+  <<: *base
+  build:
+    context: .
+    network: host
+    dockerfile: Dockerfile
+  volumes:
+    - StaticFiles:/app/static
+
 
 services:
   postgres:
+    <<: *base
     image: postgres
-    env_file:
-      - .env
-    networks:
-      - TweetTel
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data:z
-    restart: unless-stopped
+      - ./postgres_data:/var/lib/postgresql/data
 
   nginx:
+    <<: *base
     image: nginx
     ports:
       - "8000:80"
     volumes:
       - ./config/nginx/conf.d/:/etc/nginx/conf.d/
-      - ./static:/app/static
+      - StaticFiles:/app/static
     depends_on:
       - django
-    networks:
-      - TweetTel
-    restart: unless-stopped
 
   redis:
+    <<: *base
     image: redis
     volumes:
       - ./redis_data:/data
-    networks:
-      - TweetTel
-    restart: unless-stopped
 
   rabbitmq:
+    <<: *base
     image: rabbitmq:3-management
-    networks:
-      - TweetTel
-    restart: unless-stopped
 
-  django: &django
-    build:
-      context: .
-      network: host
-      dockerfile: Dockerfile
-    env_file:
-      - .env
+  django:
+    <<: *main-app-image
+    command: bash -c "python manage.py migrate && python manage.py migrate && gunicorn config.wsgi:application --bind :8000"
     expose:
       - 8000
-    volumes:
-      - ./static:/app/static
-    command: bash -c "python manage.py migrate && python manage.py migrate && gunicorn config.wsgi:application --bind :8000"
-    networks:
-      - TweetTel
     depends_on:
       - postgres
       - redis
-    restart: unless-stopped
 
   celery:
-    <<: *django
+    <<: *main-app-image
     command: bash -c "celery -A config worker -l INFO --autoscale 10,3"
-    env_file:
-      - .env
     environment:
       - C_FORCE_ROOT=true
     depends_on:
       - rabbitmq
       - django
-    networks:
-      - TweetTel
-    restart: unless-stopped
 
   flower:
-    <<: *django
+    <<: *main-app-image
     command: bash -c "celery -A config flower --address=127.0.0.6 --port=5566"
-    env_file:
-      - .env
     expose:
       - 5566
     environment:
@@ -83,9 +75,9 @@ services:
     depends_on:
       - rabbitmq
       - django
-    networks:
-      - TweetTel
-    restart: unless-stopped
 
 networks:
   TweetTel:
+
+volumes:
+  StaticFiles:
