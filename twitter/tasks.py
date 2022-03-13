@@ -62,6 +62,8 @@ def send_tweet_to_telegram(data):
         return
     if tweet.is_reply:
         return
+    if tweet.is_retweet:
+        return
 
     tweet_image = generate_tweet_image(
         name=tweet.user.name,
