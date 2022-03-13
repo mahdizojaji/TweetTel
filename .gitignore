@@ -403,7 +403,7 @@ pip-selfcheck.json
 ### Custom
 temp/
 tmp/
-.env
+*.env
 .git/
 .samples/
 postgres_data/
