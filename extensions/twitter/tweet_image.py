@@ -12,6 +12,11 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from bidi.algorithm import get_display
 from django.conf import settings
+from logging import getLogger
+
+
+logger = getLogger(__name__)
+
 
 # Numbers
 margin_x = 32
@@ -69,6 +74,8 @@ def get_drawer_with_background():
 
 def generate_twitter_name_and_get_width(drawer, twitter_name):
     text_font = ImageFont.truetype(font_bold, header_font_size)
+    if settings.TWEET_IMAGE_TEXT_RESHAPE:
+        twitter_name = get_display(arabic_reshaper.reshape(twitter_name))
     drawer.text((twitter_name_x, twitter_name_y), twitter_name, font=text_font, fill=first_text_color)
     return text_font.getsize(twitter_name)[0]
 
@@ -115,18 +122,26 @@ def generate_main_text_and_get_final_y(drawer, text, space_width):
     x_text_margin = margin_x
     text_lines_spacing = 10
     text_font = ImageFont.truetype(font_file, 46)
+    text = text.replace('\n', ' ').replace('\r', ' ')
+    if settings.TWEET_IMAGE_TEXT_RESHAPE:
+        text = get_display(arabic_reshaper.reshape(text))
     for line in textwrap.wrap(text, width=54):
         if '@' in line or '#' in line or contains_url(line):
             string_parts = line.split(' ')
+            if not settings.TWEET_IMAGE_TEXT_RESHAPE:
+                string_parts = string_parts[::-1]
             next_x = 0
             for index, part in enumerate(string_parts):
-                if '@' == part[0] or '#' == part[0] or is_valid_url(part):
+                if len(part) == 0:
+                    continue
+                if not settings.TWEET_IMAGE_TEXT_RESHAPE and (part[0] in ('@', '#') or is_valid_url(part)):
+                    color = links_color
+                elif settings.TWEET_IMAGE_TEXT_RESHAPE and (part[-1] in ('@', '#') or is_valid_url(part)):
                     color = links_color
                 else:
                     color = 'white'
                 part_width = get_width_for_text(text=part)
-                persian_part = get_display(arabic_reshaper.reshape(part))
-                drawer.text((x_text_margin + next_x, y_text_position), persian_part, font=text_font, fill=color)
+                drawer.text((x_text_margin + next_x, y_text_position), part, font=text_font, fill=color)
                 next_x += part_width + space_width
         else:
             drawer.text((x_text_margin, y_text_position), line, font=text_font, fill="white")
