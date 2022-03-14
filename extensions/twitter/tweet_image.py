@@ -125,7 +125,11 @@ def generate_main_text_and_get_final_y(drawer, text, space_width):
     text = text.replace('\n', ' ').replace('\r', ' ')
     if settings.TWEET_IMAGE_TEXT_RESHAPE:
         text = get_display(arabic_reshaper.reshape(text))
-    for line in textwrap.wrap(text, width=54):
+        lines_wrapper = textwrap.wrap(text, width=54)[::-1]
+    else:
+        lines_wrapper = textwrap.wrap(text, width=54)
+
+    for line in lines_wrapper:
         if '@' in line or '#' in line or contains_url(line):
             string_parts = line.split(' ')
             if not settings.TWEET_IMAGE_TEXT_RESHAPE:
