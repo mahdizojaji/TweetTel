@@ -77,10 +77,7 @@ class Tweet(Status):
         if media := json.get('extended_entities', {}).get('media'):
             for media_item in media:
                 status.media_urls.append(media_item['media_url_https'])
-        if status.is_quote:
-            status.url = json['quoted_status_permalink']['expanded']
-        else:
-            status.url = f'https://twitter.com/{status.user.screen_name}/status/{status.id}'
+        status.url = f'https://twitter.com/{status.user.screen_name}/status/{status.id}'
         if full_text := json.get('extended_tweet', {}).get('full_text'):
             status.text = full_text
         if status.is_retweet:
