@@ -21,6 +21,7 @@ x-django-app:
 
 services:
   postgres:
+    container_name: postgres
     <<: *base
     image: postgres
     volumes:
@@ -29,6 +30,7 @@ services:
   nginx:
     <<: *base
     image: nginx
+    container_name: nginx
     ports:
       - "8000:80"
     volumes:
@@ -39,25 +41,31 @@ services:
 
   redis:
     <<: *base
+    container_name: redis
     image: redis
     volumes:
       - ./redis_data:/data
 
   rabbitmq:
     <<: *base
+    container_name: rabbitmq
     image: rabbitmq:3-management
 
   django:
     <<: *main-app-image
+    container_name: django
     command: bash -c "python manage.py migrate && python manage.py migrate && gunicorn config.wsgi:application --bind :8000"
-    expose:
-      - 8000
+    ports:
+      - "8001:8000"
+    # expose:
+    #   - 8000
     depends_on:
       - postgres
       - redis
 
   celery:
     <<: *main-app-image
+    container_name: celery
     command: bash -c "celery -A config worker -l INFO --autoscale 10,3"
     environment:
       - C_FORCE_ROOT=true
@@ -67,6 +75,7 @@ services:
 
   flower:
     <<: *main-app-image
+    container_name: flower
     command: bash -c "celery -A config flower --address=127.0.0.6 --port=5566"
     expose:
       - 5566
