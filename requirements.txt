@@ -1,5 +1,5 @@
 pip==22.0.4
-django==3.2
+django==3.2.12
 python-decouple==3.6
 psycopg2-binary==2.9.3
 celery==5.2.3
