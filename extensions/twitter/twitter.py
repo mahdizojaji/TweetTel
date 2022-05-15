@@ -9,7 +9,10 @@ auth = OAuthHandler(consumer_key=settings.CONSUMER_KEY, consumer_secret=settings
 auth.set_access_token(key=settings.ACCESS_TOKEN, secret=settings.ACCESS_TOKEN_SECRET)
 
 APIv1 = API(auth=auth, wait_on_rate_limit=True)
-APIv2 = Client(bearer_token=settings.BEARER_TOKEN)
+APIv2 = Client(
+    consumer_key=settings.CONSUMER_KEY, consumer_secret=settings.CONSUMER_SECRET,
+    access_token=settings.ACCESS_TOKEN, access_token_secret=settings.ACCESS_TOKEN_SECRET
+)
 
 logger = getLogger(__name__)
 
