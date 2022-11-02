@@ -1,4 +1,6 @@
+from django.utils import timezone
 from django.core.cache import cache
+from django.http import HttpResponse
 from django.contrib import admin, messages
 from django.utils.translation import gettext as _, ngettext
 
@@ -15,7 +17,7 @@ class TargetUserAdmin(admin.ModelAdmin):
     list_display = ('id', 'uuid', 'twitter_id', 'username', 'name', 'created_at', 'updated_at')
     fields = ('id', 'uuid', 'twitter_id', 'username', 'name', 'created_at', 'updated_at')
     readonly_fields = ('id', 'uuid', 'created_at', 'updated_at')
-    actions = ['update_data', 'clear_invalid', 'update_stream']
+    actions = ('update_data', 'clear_invalid', 'update_stream', 'export_usernames')
 
     @admin.action(description='Update stream target users')
     def update_stream(self, request, queryset):
@@ -62,6 +64,14 @@ class TargetUserAdmin(admin.ModelAdmin):
             f'{deleted} Target Users were deleted.',
             deleted,
         ), messages.SUCCESS)
+
+    @admin.action(description='Export usernames')
+    def export_usernames(self, request, queryset):
+        data = '\n'.join(queryset.values_list('username', flat=True))
+        response = HttpResponse(data, content_type='text/strings')
+        response['Content-Length'] = len(data.encode('utf-8'))
+        response['Content-Disposition'] = f'attachment; filename=export_usernames_{int(timezone.now().timestamp())}.txt'
+        return response
 
     def save_model(self, request, obj, form, change):
         if isinstance(obj.username, str):
